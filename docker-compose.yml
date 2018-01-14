@@ -4,7 +4,7 @@ services:
   consul:
     image: "consul"
     hostname: "consul"
-    command: "agent -dev -client 0.0.0.0"
+    command: "agent -server -bind 0.0.0.0 -client 0.0.0.0 -bootstrap-expect=1 -ui"
     ports:
       - "8400:8400"
       - "8500:8500"
@@ -26,3 +26,19 @@ services:
       - ./config/vault:/config
       - ./config/vault/policies:/policies
     entrypoint: /wait-for-it.sh -t 20 -h consul -p 8500 -s -- vault server -config=/config/with-consul.hcl
+
+  client:
+    image: "consul-client"
+    hostname: "client"
+    links:
+      - "consul:consul"
+      - "vault:vault"
+    build:
+      context: .
+      dockerfile: Dockerfile-client
+    environment:
+      VAULT_ADDR: http://vault:8200
+      CONSUL_HTTP_ADDR: consul:8500
+    volumes:
+      - ./arctools:/mnt/data
+    entrypoint: consul agent -data-dir=/tmp/ -retry-join consul

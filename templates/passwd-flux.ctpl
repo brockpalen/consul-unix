@@ -1,0 +1,28 @@
+{{/* template for building /etc/passwd on Flux */}}
+{{/*
+arcusers/users/<uniquename>/
+                           /common/commonName  :  Display Name
+                           /common/uid         :  unix uid
+                           /<service>/gid      :  default groupid
+                           /<service>/homedir  :  value of $HOME
+                           /<service>/shell    :  Shell for user eg /bin/bash
+*/}}
+{{/*  Include system users as static file  */}}
+{{- template "flux-header" -}}
+{{- range $key, $pairs := tree "arcusers/users/" | explode -}}
+   {{ if .flux }}
+{{ $key }}:x:{{ $pairs.common.uid }}:{{ $pairs.flux.gid }}:{{ $pairs.common.commonName }}:{{ $pairs.flux.homedir }}:{{ $pairs.flux.shell }}
+   {{- end -}}
+{{- end -}}
+
+
+
+{{/* Header of system users for target system */}}
+{{ define "flux-header" }}
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+adm:x:3:4:adm:/var/adm:/sbin/nologin
+lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+sync:x:5:0:sync:/sbin:/bin/sync{{ end }}
+{{/* the trailing END cannot be on own line or a space will appear in your resulting file */}}
